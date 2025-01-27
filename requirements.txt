@@ -3,3 +3,6 @@ uvicorn
 sqlalchemy
 asyncpg
 python-dotenv
+psycopg2-binary
+passlib
+pyjwt
