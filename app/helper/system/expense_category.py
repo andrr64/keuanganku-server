@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.model.system_expense_category import ModelSystemExpenseCategory
+from app.model.system.expense_category import ModelSystemExpenseCategory
 from app.database import engine, SessionLocal
 
 class HelperSystemExpenseCategory:

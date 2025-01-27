@@ -1,15 +1,15 @@
 import jwt
 import os
 from app.helper.response import HelperResponse
-from app.model.user import ModelUser
+from app.model.user.user import ModelUser
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
-from app.helper.user import HelperUser
+from app.helper.user.user import HelperUser
 from fastapi import HTTPException
 from datetime import datetime, timezone, timedelta
 from app.controller.response import ControllerResponse
-from app.model.user_info import ModelUserInformation
-from app.helper.user import HelperUser
+from app.model.user.information import ModelUserInformation
+from app.helper.user.user import HelperUser
 from starlette import status as HTTPStatus
 
 TOKEN_SECRET_KEY = os.getenv("TOKEN_SECRET_KEY")

@@ -1,5 +1,5 @@
-from app.model.user import ModelUser
-from app.model.user_info import ModelUserInformation
+from app.model.user.user import ModelUser
+from app.model.user.information import ModelUserInformation
 from sqlalchemy.orm import Session
 from app.helper.response import HelperResponse
 

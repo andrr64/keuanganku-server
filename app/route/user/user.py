@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Response, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.controller.user import ControllerUser
+from app.controller.user.user import ControllerUser
 from app.controller.response import ControllerResponse
 from starlette import status as HTTPStatus
 import os
