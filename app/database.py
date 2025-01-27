@@ -2,8 +2,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy import create_engine
 import os
 
-db_url = os.getenv("DATABASE_URL")
-
+db_url = os.getenv("DATABASE_URL") if not os.getenv("debug") == 'yes' else os.getenv("DATABASE_URL_DEBUG")
 engine = create_engine(db_url)
 
 try:
