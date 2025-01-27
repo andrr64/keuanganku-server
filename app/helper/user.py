@@ -2,9 +2,6 @@ from model.user import ModelUser
 from model.user_info import ModelUserInformation
 from sqlalchemy.orm import Session
 from helper.response import HelperResponse
-from dotenv import load_dotenv
-
-load_dotenv()
 
 class HelperUser:
     @staticmethod
