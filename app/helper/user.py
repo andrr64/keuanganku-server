@@ -1,7 +1,7 @@
-from model.user import ModelUser
-from model.user_info import ModelUserInformation
+from app.model.user import ModelUser
+from app.model.user_info import ModelUserInformation
 from sqlalchemy.orm import Session
-from helper.response import HelperResponse
+from app.helper.response import HelperResponse
 
 class HelperUser:
     @staticmethod

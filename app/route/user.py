@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends, Response, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from database import get_db
-from controller.user import ControllerUser
-from controller.response import ControllerResponse
+from app.database import get_db
+from app.controller.user import ControllerUser
+from app.controller.response import ControllerResponse
 from starlette import status as HTTPStatus
 import os
 
@@ -56,7 +56,6 @@ async def login_user(user: FormLoginUser, db: Session = Depends(get_db), respons
     response_data = ControllerUser.login_user(db=db, username=user.username, password=user.password)
     if (response_data.success):
         token = response_data.data["access_token"]
-        print(debug)
         response.set_cookie(
             key="access_token", # Nama cookie
             value=token,        # Nilai token JWT
