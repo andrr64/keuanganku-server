@@ -1,18 +1,18 @@
-from sqlalchemy import ForeignKey, DateTime, Column, String
+import uuid
+from sqlalchemy import ForeignKey, DateTime, Column, String, UUID
 from datetime import datetime, timezone
 from app.database import Base
 from sqlalchemy.orm import relationship
-import uuid
-from sqlalchemy.dialects.postgresql import UUID
 
-class ModelUserIncomeCategory(Base):
-    __tablename__ = "user_income_category"
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+class ModelUserExpense(Base):
+    __tablename__ = "user_expense"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     userid = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
+    categoryid = Column(UUID(as_uuid=True), ForeignKey("user_expense_category.id"), nullable=False)
     title = Column(String(50), nullable=False)
-    
+
     createdAt = Column(DateTime, default=datetime.now(timezone.utc))
     updatedAt = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
 
-    user = relationship("ModelUser", back_populates="income_categories")
+    user = relationship("ModelUser", back_populates="expenses")

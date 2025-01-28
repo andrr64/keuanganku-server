@@ -1,18 +1,13 @@
-import jwt
+import datetime
 import os
-from app.helper.response import HelperResponse
 from app.model.user.user import ModelUser
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
-from app.helper.user.user import HelperUser
-from fastapi import HTTPException
-from datetime import datetime, timezone, timedelta
 from app.controller.response import ControllerResponse
-from app.model.user.information import ModelUserInformation
 from app.helper.user.user import HelperUser
-from app.controller.user.token import access_token_expired
 from fastapi import Response
-from app.controller.user.token import set_access_token
+from app.middleware import token as TokenUtil
+import uuid
 
 TOKEN_SECRET_KEY = os.getenv("TOKEN_SECRET_KEY")
 TOKEN_ALGORITHM = os.getenv("TOKEN_ALGORITHM")
@@ -21,7 +16,7 @@ class ControllerUser:
     __pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     
     @staticmethod
-    def getHashPassword(pswd: str) -> str:
+    def get_hash_password(pswd: str) -> str:
         return ControllerUser.__pwd_context.hash(pswd)
     
     @staticmethod
@@ -46,102 +41,53 @@ class ControllerUser:
             err_message=helper_response.message,
             http_code=500
         )
-    
+
+    @staticmethod
+    def update_user(db: Session, user_id: uuid, response: Response, new_username: str | None, new_password: str | None, new_name: str | None) -> ControllerResponse:
+        find_user = HelperUser.read_user_by_id(db=db, id=user_id)
+        if not find_user.success:
+            return ControllerResponse.not_found()
+        user: ModelUser = find_user.data
+        user_info = user.information
+
+        if new_username:
+            user.username = new_username
+        if new_password:
+            user.password = ControllerUser.get_hash_password(new_password)
+        if new_name:
+            user_info.name = new_name
+        try:
+            user.updatedAt = datetime.datetime.now(datetime.timezone.utc)
+            user_info.updatedAt = datetime.datetime.now(datetime.timezone.utc)
+            db.commit()
+            db.refresh(user)
+            db.refresh(user_info)
+            return ControllerResponse.success(data={
+                "username": user.username,
+                "name": user_info.name,
+                "updatedAt": user.updatedAt,
+            })
+        except Exception as e:
+            db.rollback()
+            return ControllerResponse.error(err_message=f"Error while updating user: {str(e)}")
+
+
     @staticmethod
     def login_user(db: Session, username: str, password: str, response: Response) -> ControllerResponse:
-        helper_response = HelperUser.read_user_by_username(db=db, username=username)
-        if not helper_response.success:
+        find_user = HelperUser.read_user_by_username(db=db, username=username)
+        if not find_user.success:
             return ControllerResponse.not_found()
-            
-        existing_user: ModelUser | None = HelperUser.read_user_by_username(db=db, username=username).data
-        if not existing_user:
+        user: ModelUser = find_user.data
+
+        if not ControllerUser.__pwd_context.verify(password, user.password):
             return ControllerResponse.error("Invalid username or password")
-        
-        if not ControllerUser.__pwd_context.verify(password, existing_user.password):
-            return ControllerResponse.error("Invalid username or password")
-        
-        token = ControllerUser.create_access_token(data={"sub": existing_user.username})
-        set_access_token(token=token, response=response)
 
-        user_info_data: ModelUserInformation= existing_user.information
+        # Generate dan set token
+        access_token = TokenUtil.create_access_token(user.id)
+        TokenUtil.set_access_token(access_token, response)
 
-        controller_response = ControllerResponse.success(
-            data={
-                "username": existing_user.username,
-                "name": user_info_data.name
-            }
-        )
-        return controller_response
-        
-    @staticmethod
-    def create_access_token(data: dict) -> str:
-        secret_key = TOKEN_SECRET_KEY
-        algorithm = TOKEN_ALGORITHM
-        
-        expire = datetime.now(timezone.utc) + access_token_expired
-        to_encode = data.copy()
-        to_encode.update({"exp": expire})
-        encoded_jwt = jwt.encode(to_encode, secret_key, algorithm=algorithm)
-        return encoded_jwt
-
-    @staticmethod
-    def update_userinfo(db: Session, oldUsername: str, new_username: str, new_password: str, name: str, response: Response):
-        getuserdata: HelperResponse = HelperUser.read_user_by_username(db=db, username=oldUsername)
-        if (not getuserdata.data):
-            return ControllerResponse.not_found()
-       
-        user: ModelUser = getuserdata.data
-        userinfo: ModelUserInformation= user.information
-        new_token = None
-
-        if new_username != oldUsername:
-            username_taken = HelperUser.read_user_by_username(db=db, username=new_username).data
-            if (username_taken):
-                return ControllerResponse.conflict(err_message="Username already exists")
-            user.username = new_username
-            new_token = ControllerUser.create_access_token(data={'sub': new_username})
-        if new_password:
-            user.password = ControllerUser.getHashPassword(new_password)
-        if name:
-            userinfo.name = name
-
-        db.commit()
-        db.refresh(userinfo)
-
-        if new_token is not None:
-            set_access_token(token=new_token, response=response)
-
-        return ControllerResponse.success(data={
-            "username": user.username,
-            "name": userinfo.name,
+        name = user.information.new_name
+        return ControllerResponse.success(message="OK", data={
+            "name": name,
+            "username": username
         })
-        
-    @staticmethod
-    def is_accesstoken_valid(token: str) -> ControllerResponse:
-        """This function will return username or exception"""
-        try:
-            payload = jwt.decode(token, TOKEN_SECRET_KEY, algorithms=[TOKEN_ALGORITHM])
-            username = payload['sub']
-            return ControllerResponse.success(data=username)
-        except jwt.ExpiredSignatureError:
-            return ControllerResponse.unauthorized(err_message="Token has expired")
-        except jwt.InvalidTokenError:
-            return ControllerResponse.unauthorized(err_message="Invalid token")
-
-    @staticmethod
-    def decode_access_token(token: str) -> dict:
-        secret_key = TOKEN_SECRET_KEY
-        algorithm = TOKEN_ALGORITHM
-        try:
-            payload = jwt.decode(token, secret_key, algorithms=[algorithm])
-            return payload
-        except jwt.ExpiredSignatureError:
-            raise HTTPException(
-                status_code=401,
-                detail="Token has expired"
-            )
-        except jwt.InvalidTokenError:
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid token"
-            )

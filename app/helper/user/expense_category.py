@@ -30,4 +30,4 @@ class HelperUserExpenseCategory:
             db.rollback()  
             return HelperResponse.error(err_message=str(e))
         finally:
-            db.close() 
+            db.close()

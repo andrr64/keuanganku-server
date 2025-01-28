@@ -1,14 +1,14 @@
-from sqlalchemy import Column, Integer, String, DateTime, SmallInteger
-from sqlalchemy.orm import relationship
+import uuid
 import datetime
+from sqlalchemy import Column, String, DateTime, SmallInteger, UUID
+from sqlalchemy.orm import relationship
 from app.database import Base
 
-# Menggunakan string untuk mendefinisikan relasi dengan ModelUserExpenseCategory
 class ModelUser(Base):
     __tablename__ = "user"
    
-    id = Column(Integer, primary_key=True)
-    username = Column(String(50), nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    username = Column(String(50), nullable=False, unique=True)
     password = Column(String, nullable=False)
     user_type = Column(SmallInteger, nullable=False, default=1)
     createdAt = Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc))
@@ -17,3 +17,4 @@ class ModelUser(Base):
     information = relationship("ModelUserInformation", back_populates="user", uselist=False, cascade="all, delete-orphan")
     expense_categories = relationship("ModelUserExpenseCategory", back_populates="user", cascade="all, delete-orphan")
     income_categories = relationship("ModelUserIncomeCategory", back_populates="user", cascade="all, delete-orphan")
+    expenses = relationship("ModelUserExpense", back_populates="user", cascade="all, delete-orphan")

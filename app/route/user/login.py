@@ -6,12 +6,12 @@ from app.controller.user.user import ControllerUser
 
 router = APIRouter()
 
-class RequestFields(BaseModel):
+class LoginFields(BaseModel):
     username: str
     password: str
 
 @router.post("/login")
-async def login_user(user: RequestFields, db: Session = Depends(get_db), response: Response= None):
+async def login_user(user: LoginFields, db: Session = Depends(get_db), response: Response= None):
     controller_response = ControllerUser.login_user(
         db=db,
         username=user.username,

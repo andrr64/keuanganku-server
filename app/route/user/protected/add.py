@@ -1,6 +1,5 @@
 from fastapi import APIRouter
-from app.route.user.protected.add import expense_category, income_category
-
+from app.route.user.protected import expense_category, income_category
 
 router = APIRouter()
 
