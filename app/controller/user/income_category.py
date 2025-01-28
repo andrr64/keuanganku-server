@@ -6,13 +6,36 @@ from fastapi import status, HTTPException
 
 class ControllerUserIncomeCategory:
     @staticmethod
-    def add_income_category(db: Session, user:ModelUser, title: str) -> ControllerResponse:
-        if HelperUserIncomeCategory.is_like_category_exists(db=db, user=user, title=title):
-            return ControllerResponse.error(
-                err_message='Category already exists',
-                http_code=status.HTTP_409_CONFLICT
-            )
-        response = HelperUserIncomeCategory.create_expense_category(db=db, user=user, title=title)
-        if not response.success:
-            return ControllerResponse.error(err_message=response.message)
-        return ControllerResponse.success(data=response.data)
+    def add_income_category(db: Session, user_id: str, title: str) -> ControllerResponse:
+        user = db.query(ModelUser).filter(ModelUser.id == user_id).first()
+        if not user:
+            return ControllerResponse.not_found(err_message="Unknown Account or Invalid Token")
+        category_already_exists = HelperUserIncomeCategory.is_like_category_exists(db=db, user=user, title=title)
+        if category_already_exists:
+            return ControllerResponse.conflict(err_message="Category already exists")
+        
+        insert_inc_category = HelperUserIncomeCategory.create_income_category(db=db, user=user, title=title)
+        
+        if not insert_inc_category.success:
+            return ControllerResponse.error(err_message=insert_inc_category.message)
+        return ControllerResponse.success(
+            data=insert_inc_category.data
+        )
+        
+    @staticmethod
+    def get_income_category(db: Session, user_id: str) -> ControllerResponse:
+        user = db.query(ModelUser).filter(ModelUser.id == user_id).first()
+        if not user:
+            return ControllerResponse.not_found("Unknown User")
+        
+        # Misalnya expense_categories adalah list dari dictionary
+        filtered_categories = []
+        for category in user.income_categories:
+            category_dict = category.__dict__  
+            category_dict.pop("createdAt", None)  
+            category_dict.pop("userid", None)    
+            filtered_categories.append(category_dict)
+
+        return ControllerResponse.success(
+            data=filtered_categories
+        )

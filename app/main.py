@@ -8,6 +8,7 @@ from app.database import Base, engine
 from app.route.user import user
 from app.helper.user.expense_category import HelperUserExpenseCategory
 from app.helper.user.income_category import HelperUserIncomeCategory
+from app.route import check_token
 
 app = FastAPI()
 
@@ -21,3 +22,4 @@ async def root():
     return 'KeuanganKu Server 0.0'
 
 app.include_router(user.router, prefix="/user", tags=["user"])
+app.include_router(check_token.router)

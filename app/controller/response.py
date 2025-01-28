@@ -1,6 +1,7 @@
 from fastapi import status, Response
 from os import getenv
-
+from typing import Callable
+from fastapi import HTTPException
 debug= getenv('debug') == 'yes'
 
 class ControllerResponse:
@@ -49,3 +50,13 @@ class ControllerResponse:
     @staticmethod
     def conflict(err_message: str = "Conflict", data: any= None):
         return ControllerResponse(success=False, data=data, message=err_message, http_code=status.HTTP_409_CONFLICT)
+    
+def handle_controller_response(ctrl_res: ControllerResponse, fn_suc: Callable[[ControllerResponse], any] = None):
+    if not ctrl_res.success:
+        raise HTTPException(
+            status_code=ctrl_res.http_code,
+            detail=ctrl_res.message
+        )
+    if fn_suc:
+        return fn_suc(ctrl_res)
+    return ctrl_res.to_dict()

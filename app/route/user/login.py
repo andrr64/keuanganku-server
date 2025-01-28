@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.controller.user.user import ControllerUser
+from app.controller.response import handle_controller_response
 
 router = APIRouter()
 
@@ -11,16 +12,11 @@ class LoginFields(BaseModel):
     password: str
 
 @router.post("/login")
-async def login_user(user: LoginFields, db: Session = Depends(get_db), response: Response= None):
+async def login_user(user: LoginFields, response: Response, db: Session = Depends(get_db)):
     controller_response = ControllerUser.login_user(
         db=db,
         username=user.username,
         password=user.password,
         response=response
     )
-    if not controller_response.success:
-        raise HTTPException(
-            status_code=controller_response.http_code,
-            detail=controller_response.message
-        )
-    return controller_response.to_dict()
+    return handle_controller_response(controller_response)

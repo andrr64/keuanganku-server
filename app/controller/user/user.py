@@ -1,5 +1,6 @@
 import datetime
 import os
+import uuid
 from app.model.user.user import ModelUser
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
@@ -7,7 +8,6 @@ from app.controller.response import ControllerResponse
 from app.helper.user.user import HelperUser
 from fastapi import Response
 from app.middleware import token as TokenUtil
-import uuid
 
 TOKEN_SECRET_KEY = os.getenv("TOKEN_SECRET_KEY")
 TOKEN_ALGORITHM = os.getenv("TOKEN_ALGORITHM")
@@ -84,10 +84,9 @@ class ControllerUser:
 
         # Generate dan set token
         access_token = TokenUtil.create_access_token(user.id)
-        TokenUtil.set_access_token(access_token, response)
-
-        name = user.information.new_name
+        TokenUtil.set_access_token(token=access_token, response=response)
+        name = user.information.name
         return ControllerResponse.success(message="OK", data={
             "name": name,
-            "username": username
+            "username": username,
         })

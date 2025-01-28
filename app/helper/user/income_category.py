@@ -20,12 +20,12 @@ class HelperUserIncomeCategory:
 
     
     @staticmethod
-    def create_expense_category(db: Session, user: ModelUser, title: str) -> HelperResponse:
-        new_expense_category = ModelUserIncomeCategory(userid=user.id, title=title)
+    def create_income_category(db: Session, user: ModelUser, title: str) -> HelperResponse:
+        new_inc_Category = ModelUserIncomeCategory(userid=user.id, title=title)
         try:
-            db.add(new_expense_category)
+            db.add(new_inc_Category)
             db.commit()
-            return HelperResponse.success(data=new_expense_category)
+            return HelperResponse.success(data=new_inc_Category)
         except Exception as e:
             db.rollback()  
             return HelperResponse.error(err_message=str(e))
