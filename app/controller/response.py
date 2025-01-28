@@ -6,7 +6,7 @@ debug= getenv('debug') == 'yes'
 
 class ControllerResponse:
     def __init__(self, success: bool, message: str, data: any= None, http_code: int= 200):
-        self.message = message
+        self.detail = message
         self.data = data
         self.success = success
         self.http_code = http_code
@@ -14,12 +14,12 @@ class ControllerResponse:
     def to_dict_error(self) -> dict:
         return {
             "status": self.success,
-            "message": self.message
+            "detail": self.detail
         }
     def to_dict(self) -> dict:
         return {
             "status": self.success,
-            "message": self.message,
+            "detail": self.detail,
             "data": self.data
         }
     
