@@ -1,3 +1,8 @@
+from fastapi import status, Response
+from os import getenv
+
+debug= getenv('debug') == 'yes'
+
 class ControllerResponse:
     def __init__(self, success: bool, message: str, data: any= None, http_code: int= 200):
         self.message = message
@@ -40,3 +45,7 @@ class ControllerResponse:
     @staticmethod
     def not_found(err_message: str = "Not Found", data: any = None):
         return ControllerResponse(success=False, data=data, message=err_message, http_code=404)
+    
+    @staticmethod
+    def conflict(err_message: str = "Conflict", data: any= None):
+        return ControllerResponse(success=False, data=data, message=err_message, http_code=status.HTTP_409_CONFLICT)

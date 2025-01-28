@@ -1,29 +1,25 @@
-from fastapi import APIRouter, Request, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.controller.user.user import ControllerUser
-from starlette import status as HTTPStatus
 from pydantic import BaseModel
-from app.controller.response import ControllerResponse
 from app.database import get_db
 
-class FormRegisterUser(BaseModel):
+class RequestFields(BaseModel):
     username: str
     password: str
 
 router = APIRouter()
 
 @router.post("/register")
-async def register_user(user: FormRegisterUser, db: Session = Depends(get_db)):
-    response: ControllerResponse = ControllerUser.create_user(
+async def register_user(body: RequestFields, db: Session = Depends(get_db)):
+    controller_response = ControllerUser.create_user(
         db=db, 
-        username=user.username, 
-        password=user.password
+        username=body.username,
+        password=body.password
     )
-    
-    if response.success:
-        return {"message": response.message}
-    else:
+    if not controller_response.success:
         raise HTTPException(
-            status_code=response.http_code,  # Gunakan status code dari HelperResponse
-            detail=response.message  # Gunakan pesan dari HelperResponse
+            status_code=controller_response.http_code,
+            detail=controller_response.message
         )
+    return controller_response.to_dict()

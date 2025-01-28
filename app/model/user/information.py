@@ -12,4 +12,4 @@ class ModelUserInformation(Base):
     createdAt = Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc))
     updatedAt = Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc), onupdate=datetime.datetime.now(datetime.timezone.utc))
     
-    user = relationship("ModelUser", back_populates="user_information", uselist=False)
+    user = relationship("ModelUser", back_populates="information", uselist=False)

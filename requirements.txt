@@ -1,9 +1,12 @@
-fastapi
+fastapi~=0.115.7
 uvicorn
-sqlalchemy
+sqlalchemy~=2.0.37
 asyncpg
-python-dotenv
+python-dotenv~=1.0.1
 psycopg2-binary
-passlib
-pyjwt
+passlib~=1.7.4
+pyjwt~=2.10.1
 alembic
+bcrypt
+pydantic~=2.10.6
+starlette~=0.45.3

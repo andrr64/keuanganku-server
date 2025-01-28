@@ -10,14 +10,15 @@ from datetime import datetime, timezone, timedelta
 from app.controller.response import ControllerResponse
 from app.model.user.information import ModelUserInformation
 from app.helper.user.user import HelperUser
-from starlette import status as HTTPStatus
+from app.controller.user.token import access_token_expired
+from fastapi import Response
+from app.controller.user.token import set_access_token
 
 TOKEN_SECRET_KEY = os.getenv("TOKEN_SECRET_KEY")
 TOKEN_ALGORITHM = os.getenv("TOKEN_ALGORITHM")
 
 class ControllerUser:
     __pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    access_token_expired = timedelta(hours=24)
     
     @staticmethod
     def getHashPassword(pswd: str) -> str:
@@ -38,21 +39,21 @@ class ControllerUser:
         hashed_password = ControllerUser.__pwd_context.hash(password)
         new_user = ModelUser(username=username, password=hashed_password)
 
-        createDataResponse = HelperUser.create_user(db=db, new_user=new_user)
-        if (createDataResponse.success):
+        helper_response = HelperUser.create_user(db=db, new_user=new_user)
+        if helper_response.success:
             return ControllerResponse.success(message="Create user successful")
         return ControllerResponse.error(
-            err_message=createDataResponse.message,
+            err_message=helper_response.message,
             http_code=500
         )
     
     @staticmethod
-    def login_user(db: Session, username: str, password: str) -> ControllerResponse:
-        helperResponse = HelperUser.read_user_by_username(db=db, username=username)
-        if (not helperResponse.success):
-            return ControllerResponse.error()
+    def login_user(db: Session, username: str, password: str, response: Response) -> ControllerResponse:
+        helper_response = HelperUser.read_user_by_username(db=db, username=username)
+        if not helper_response.success:
+            return ControllerResponse.not_found()
             
-        existing_user = HelperUser.read_user_by_username(db=db, username=username).data
+        existing_user: ModelUser | None = HelperUser.read_user_by_username(db=db, username=username).data
         if not existing_user:
             return ControllerResponse.error("Invalid username or password")
         
@@ -60,52 +61,45 @@ class ControllerUser:
             return ControllerResponse.error("Invalid username or password")
         
         token = ControllerUser.create_access_token(data={"sub": existing_user.username})
-        controllerResponse = ControllerResponse.success(
+        set_access_token(token=token, response=response)
+
+        user_info_data: ModelUserInformation= existing_user.information
+
+        controller_response = ControllerResponse.success(
             data={
-                "access_token": token,
-                "token_type": "bearer"
-            },
-            message="Login Successful"
+                "username": existing_user.username,
+                "name": user_info_data.name
+            }
         )
-        return controllerResponse
+        return controller_response
         
     @staticmethod
     def create_access_token(data: dict) -> str:
         secret_key = TOKEN_SECRET_KEY
         algorithm = TOKEN_ALGORITHM
         
-        expire = datetime.now(timezone.utc) + ControllerUser.access_token_expired
+        expire = datetime.now(timezone.utc) + access_token_expired
         to_encode = data.copy()
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(to_encode, secret_key, algorithm=algorithm)
         return encoded_jwt
 
     @staticmethod
-    def update_userinfo(db: Session, token: str, oldUsername: str, new_username: str, new_password: str, name: str):
-        decoded_username = ControllerUser.is_accesstoken_valid(token=token)
-        if (not decoded_username.success):
-            return ControllerResponse.unauthorized(err_message=decoded_username.message)
-        
-        decoded_username = decoded_username.data
-        if (oldUsername != decoded_username):
-            return ControllerResponse.unauthorized(err_message='Unauthorized.')
-        
-        getuserdata: HelperResponse = HelperUser.read_user_by_username(db=db, username=decoded_username)
+    def update_userinfo(db: Session, oldUsername: str, new_username: str, new_password: str, name: str, response: Response):
+        getuserdata: HelperResponse = HelperUser.read_user_by_username(db=db, username=oldUsername)
         if (not getuserdata.data):
             return ControllerResponse.not_found()
        
         user: ModelUser = getuserdata.data
-        userinfo: ModelUserInformation= user.user_information
-        
-        
+        userinfo: ModelUserInformation= user.information
+        new_token = None
+
         if new_username != oldUsername:
-            is_user_exists = HelperUser.read_user_by_username(db=db, username=new_username).data
-            if (is_user_exists):
-                return ControllerResponse.error(
-                    err_message="Username already exists", 
-                    http_code= HTTPStatus.HTTP_409_CONFLICT
-                )
+            username_taken = HelperUser.read_user_by_username(db=db, username=new_username).data
+            if (username_taken):
+                return ControllerResponse.conflict(err_message="Username already exists")
             user.username = new_username
+            new_token = ControllerUser.create_access_token(data={'sub': new_username})
         if new_password:
             user.password = ControllerUser.getHashPassword(new_password)
         if name:
@@ -114,9 +108,12 @@ class ControllerUser:
         db.commit()
         db.refresh(userinfo)
 
+        if new_token is not None:
+            set_access_token(token=new_token, response=response)
+
         return ControllerResponse.success(data={
             "username": user.username,
-            "name": userinfo.name
+            "name": userinfo.name,
         })
         
     @staticmethod

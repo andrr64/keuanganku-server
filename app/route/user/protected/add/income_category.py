@@ -1,13 +1,12 @@
-from fastapi import APIRouter, HTTPException, Depends, Response, Request
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.controller.user.user import ControllerUser
-from app.controller.user.add.expense_category import ControllerUserExpenseCategory
+from app.controller.user.add.income_category import ControllerUserIncomeCategory
 from app.helper.user.user import HelperUser
 from app.middleware.validate_token import validate_token
 
-class Field(BaseModel):
+class RequestFields(BaseModel):
     title: str
     
     @field_validator('title')
@@ -27,17 +26,23 @@ class Field(BaseModel):
     
 router = APIRouter()
 
-@router.post('/expense-category')
-async def add_expense_category(
-    body: Field, 
+@router.post('/income-category')
+async def add_income_category(
+    body: RequestFields,
     db: Session= Depends(get_db), 
     username: str = Depends(validate_token)
 ):
-    user = HelperUser.read_user_by_username(db=db, username=username).data
-    controllerResponse = ControllerUserExpenseCategory.add_expense_category(db=db, user=user, title=body.title)
-    if (not controllerResponse.success):
+    user = HelperUser.read_user_by_username(
+        db=db,
+        username=username).data
+    controller_response = ControllerUserIncomeCategory.add_income_category(
+        db=db,
+        user=user,
+        title=body.title
+    )
+    if not controller_response.success:
         raise HTTPException(
-            status_code=controllerResponse.http_code,
-            detail=controllerResponse.message
+            status_code=controller_response.http_code,
+            detail=controller_response.message
         )
-    return controllerResponse.to_dict()
+    return controller_response.to_dict()

@@ -14,5 +14,6 @@ class ModelUser(Base):
     createdAt = Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc))
     updatedAt = Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc), onupdate=datetime.datetime.now(datetime.timezone.utc))
    
-    user_information = relationship("ModelUserInformation", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    information = relationship("ModelUserInformation", back_populates="user", uselist=False, cascade="all, delete-orphan")
     expense_categories = relationship("ModelUserExpenseCategory", back_populates="user", cascade="all, delete-orphan")
+    income_categories = relationship("ModelUserIncomeCategory", back_populates="user", cascade="all, delete-orphan")
