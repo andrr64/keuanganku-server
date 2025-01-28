@@ -55,7 +55,7 @@ def handle_controller_response(ctrl_res: ControllerResponse, fn_suc: Callable[[C
     if not ctrl_res.success:
         raise HTTPException(
             status_code=ctrl_res.http_code,
-            detail=ctrl_res.message
+            detail=ctrl_res.detail
         )
     if fn_suc:
         return fn_suc(ctrl_res)
