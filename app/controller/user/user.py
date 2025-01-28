@@ -24,13 +24,9 @@ class ControllerUser:
         if len(username.strip()) == 0 or len(password.strip()) == 0:
             return ControllerResponse.bad_request(err_message="Username and password can't be empty, Bro.")
         
-        existing_user = db.query(ModelUser).filter(ModelUser.username == username).first()
-        if existing_user:
+        existing_user = HelperUser.read_user_by_username(db=db, username=username)
+        if not (existing_user.data is None):
             return ControllerResponse.bad_request("Username has already exist")
-
-        if len(password) < 8:
-            return ControllerResponse.bad_request("Your password must be at least 8 chars long, Bro.")
-        
         hashed_password = ControllerUser.__pwd_context.hash(password)
         new_user = ModelUser(username=username, password=hashed_password)
 
@@ -45,7 +41,7 @@ class ControllerUser:
     @staticmethod
     def update_user(db: Session, user_id: uuid, response: Response, new_username: str | None, new_password: str | None, new_name: str | None) -> ControllerResponse:
         find_user = HelperUser.read_user_by_id(db=db, id=user_id)
-        if not find_user.success:
+        if find_user.data is None:
             return ControllerResponse.not_found()
         user: ModelUser = find_user.data
         user_info = user.information
@@ -75,8 +71,8 @@ class ControllerUser:
     @staticmethod
     def login_user(db: Session, username: str, password: str, response: Response) -> ControllerResponse:
         find_user = HelperUser.read_user_by_username(db=db, username=username)
-        if not find_user.success:
-            return ControllerResponse.not_found()
+        if find_user.data is None:
+            return ControllerResponse.not_found(err_message="Invalid username or password")
         user: ModelUser = find_user.data
 
         if not ControllerUser.__pwd_context.verify(password, user.password):
