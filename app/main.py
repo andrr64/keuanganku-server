@@ -19,6 +19,6 @@ HelperSystemExpenseCategory.init_expense_category()
 
 @app.get("/")
 async def root():
-    return 'OK'
+    return 'KeuanganKu Server 0.0'
 
 app.include_router(user.router, prefix="/user", tags=["user"])
