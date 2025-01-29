@@ -1,18 +1,22 @@
-from fastapi import APIRouter, Request, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 from app.controller.user.user import ControllerUser
 from pydantic import BaseModel
 from app.database import get_db
 from app.middleware.token import validate_token
 import uuid
+from app.controller.response import handle_controller_response
 
-router = APIRouter()
 
+# FIELDS
 class FormUpdateUser(BaseModel):
     new_username: str | None = None
     new_password: str | None = None
     new_name: str | None = None
-    
+
+# ROUTER & ROUTE
+router = APIRouter()
+
 @router.put('/update')
 async def update_userinfo(
     form: FormUpdateUser, 
@@ -28,9 +32,4 @@ async def update_userinfo(
         new_password=form.new_password,
         new_username=form.new_username
     )
-    if not controller_response.success:
-        raise HTTPException(
-            status_code=controller_response.http_code,
-            detail=controller_response.message
-        )
-    return controller_response.to_dict()
+    return handle_controller_response(controller_response)

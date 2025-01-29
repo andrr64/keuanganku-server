@@ -18,3 +18,4 @@ class ModelUser(Base):
     expense_categories = relationship("ModelUserExpenseCategory", back_populates="user", cascade="all, delete-orphan")
     income_categories = relationship("ModelUserIncomeCategory", back_populates="user", cascade="all, delete-orphan")
     expenses = relationship("ModelUserExpense", back_populates="user", cascade="all, delete-orphan")
+    incomes = relationship("ModelUserIncome", back_populates="user", cascade="all, delete-orphan")

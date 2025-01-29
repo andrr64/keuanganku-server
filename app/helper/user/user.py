@@ -33,7 +33,7 @@ class HelperUser:
             return HelperResponse.error(err_message=f"An error occurred: {str(e)}")
 
     @staticmethod
-    def read_user_by_id(db: Session, id: uuid):
+    def read_user_by_id(db: Session, id: str):
         try:
             data: ModelUser= db.query(ModelUser).filter(ModelUser.id == id).first()
             return HelperResponse.success(data=data)

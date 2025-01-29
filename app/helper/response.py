@@ -5,7 +5,7 @@ class HelperResponse:
         self.success = success
         self.message = message
         self.data = data
-
+    
     def to_dict(self):
         """
         Mengubah objek HelperResponse menjadi dictionary untuk pengembalian API.

@@ -6,8 +6,11 @@ from app.middleware.token import validate_token
 from app.controller.response import handle_controller_response
 from app.controller.user.income_category import ControllerUserIncomeCategory
 
+
+# FIELDS
 class AddIncomeCategoryFields(BaseModel):
     title: str
+    
     @field_validator('title')
     def validate_title(cls, v):
         v_len = len(v)
@@ -23,8 +26,8 @@ class AddIncomeCategoryFields(BaseModel):
             )
         return v
 
+# ROUTER & ROUTE
 router = APIRouter()
-
 @router.post(path='/')
 async def add_income_category(
     body: AddIncomeCategoryFields,

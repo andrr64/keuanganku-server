@@ -29,5 +29,3 @@ class HelperUserExpenseCategory:
         except Exception as e:
             db.rollback()  
             return HelperResponse.error(err_message=str(e))
-        finally:
-            db.close()

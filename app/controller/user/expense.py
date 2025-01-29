@@ -1,20 +1,30 @@
 from sqlalchemy.orm import Session
-from app.helper.user.user import HelperUser
 from app.controller.response import ControllerResponse
-from app.model.user.user import ModelUser
-from app.model.user.expense import ModelUserExpense
+from app.model.user.expense_category import ModelUserExpenseCategory
+from app.helper.user.expense import HelperExpense
+from app.model.user import expense
 
 class ControllerUserExpense:
+    
     @staticmethod
-    def add_expense(db: Session, title: str, amount: float, username: str, category_id: int):
-        find_user = HelperUser.read_user_by_username(db=db, username=username)
-        if not find_user.success:
-            return ControllerResponse.not_found(err_message="Invalid user")
-        user: ModelUser= find_user.data
-        category = next(
-            (category for category in user.expense_categories if category.id == category_id),
-            None
-        )
-        if category is None:
-            return ControllerResponse.not_found(err_message="Category not found")
-        new_expense = ModelUserExpense(title=title, amount=amount, category_id=category_id)
+    def get_expense(db: Session, user_id: str):
+        helper_response = HelperExpense.get_expense_by_userid(db=db, user_id=user_id)
+        if not helper_response.success:
+            return ControllerResponse.error(err_message=helper_response.message)
+        return ControllerResponse.success(data=[
+            expense.filter_data(x) for x in helper_response.data
+        ])
+
+    @staticmethod
+    def add_expense(db: Session, user_id: str, category_id: str, title: str, amount: float) -> ControllerResponse:
+        category_exists = db.query(ModelUserExpenseCategory).filter(
+            ModelUserExpenseCategory.userid == user_id,
+            ModelUserExpenseCategory.id == category_id
+        ).first()
+        if not category_exists:
+            return ControllerResponse.not_found(err_message="User or category not found, please re-login or refresh.")
+        
+        helper_response = HelperExpense.create_expense(db, user_id, category_id, title, amount)
+        if not helper_response.success:
+            return ControllerResponse.error(err_message="Something wrong when save data")
+        return ControllerResponse.success(data=expense.filter_data(helper_response.data))

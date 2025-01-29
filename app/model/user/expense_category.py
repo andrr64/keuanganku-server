@@ -17,3 +17,9 @@ class ModelUserExpenseCategory(Base):
     updatedAt = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
 
     user = relationship("ModelUser", back_populates="expense_categories")
+
+def filter_data(income: ModelUserExpenseCategory) -> dict:
+    return {
+        "id": income.id,
+        "title": income.title,
+    }

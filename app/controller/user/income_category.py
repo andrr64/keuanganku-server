@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from app.model.user.user import ModelUser
 from app.controller.user.user import  ControllerResponse
 from app.helper.user.income_category import HelperUserIncomeCategory
+from app.model.user.income_category import filter_data
 from fastapi import status, HTTPException
 
 class ControllerUserIncomeCategory:
@@ -15,11 +16,11 @@ class ControllerUserIncomeCategory:
             return ControllerResponse.conflict(err_message="Category already exists")
         
         insert_inc_category = HelperUserIncomeCategory.create_income_category(db=db, user=user, title=title)
-        
         if not insert_inc_category.success:
             return ControllerResponse.error(err_message=insert_inc_category.message)
+        
         return ControllerResponse.success(
-            data=insert_inc_category.data
+            data=filter_data(insert_inc_category.data)
         )
         
     @staticmethod
@@ -29,13 +30,6 @@ class ControllerUserIncomeCategory:
             return ControllerResponse.not_found("Unknown User")
         
         # Misalnya expense_categories adalah list dari dictionary
-        filtered_categories = []
-        for category in user.income_categories:
-            category_dict = category.__dict__  
-            category_dict.pop("createdAt", None)  
-            category_dict.pop("userid", None)    
-            filtered_categories.append(category_dict)
-
         return ControllerResponse.success(
-            data=filtered_categories
+            data=[filter_data(x) for x in user.income_categories]
         )

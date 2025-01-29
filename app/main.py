@@ -1,7 +1,8 @@
+from app.model.user.income import ModelUserIncome
+from app.model.user.expense import ModelUserExpense
+
 from dotenv import load_dotenv
 load_dotenv()
-
-from app.model.user.expense import ModelUserExpense
 
 from fastapi import FastAPI
 from app.database import Base, engine

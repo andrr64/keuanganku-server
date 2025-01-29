@@ -6,8 +6,10 @@ from app.controller.user.expense_category import ControllerUserExpenseCategory
 from app.middleware.token import validate_token
 from app.controller.response import handle_controller_response
 
+# FIELDS
 class AddExpenseCategoryFields(BaseModel):
     title: str
+    
     @field_validator('title')
     def validate_title(cls, v):
         v_len = len(v)
@@ -23,6 +25,7 @@ class AddExpenseCategoryFields(BaseModel):
             )
         return v
 
+# ROUTER & ROUTE
 router = APIRouter()
 
 @router.post('/')
