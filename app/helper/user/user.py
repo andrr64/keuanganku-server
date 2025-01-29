@@ -2,28 +2,18 @@ from app.model.user.user import ModelUser
 from app.model.user.information import ModelUserInformation
 from sqlalchemy.orm import Session
 from app.helper.response import HelperResponse
-import random
-import uuid
 
 name_list = ["John", "Jane", "Alice", "Bob", "Charlie"]
 
 class HelperUser:
     @staticmethod
-    def create_user(db: Session, new_user: ModelUser) -> HelperResponse:
+    def create_user(db: Session, new_user: ModelUser, name: str= None) -> HelperResponse:
         try:
             db.add(new_user)
             db.commit()
             db.refresh(new_user)
             
-            # Generate random number correctly
-            random_number = random.randint(1, 10000)
-            random_name = f"{random.choice(name_list)}#{random_number}"
-            
-            # Check if name is within the length limit
-            if len(random_name) > 100:
-                random_name = random_name[:100]  # Trim to 100 characters if necessary
-            
-            user_info = ModelUserInformation(name=random_name, userid=new_user.id)
+            user_info = ModelUserInformation(name=name, userid=new_user.id)
             db.add(user_info)
             db.commit()
             

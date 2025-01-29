@@ -20,17 +20,14 @@ class ControllerUser:
         return ControllerUser.__pwd_context.hash(pswd)
     
     @staticmethod
-    def create_user(db: Session, username: str, password: str) -> ControllerResponse:
-        if len(username.strip()) == 0 or len(password.strip()) == 0:
-            return ControllerResponse.bad_request(err_message="Username and password can't be empty, Bro.")
-        
+    def create_user(db: Session, name: str, username: str, password: str) -> ControllerResponse:
         existing_user = HelperUser.read_user_by_username(db=db, username=username)
         if not (existing_user.data is None):
             return ControllerResponse.bad_request("Username has already exist")
         hashed_password = ControllerUser.__pwd_context.hash(password)
         new_user = ModelUser(username=username, password=hashed_password)
 
-        helper_response = HelperUser.create_user(db=db, new_user=new_user)
+        helper_response = HelperUser.create_user(db=db, new_user=new_user, name=name)
         if helper_response.success:
             return ControllerResponse.success(message="Create user successful")
         return ControllerResponse.error(
