@@ -10,3 +10,4 @@ alembic
 bcrypt
 pydantic~=2.10.6
 starlette~=0.45.3
+logguru~=0.7.3
