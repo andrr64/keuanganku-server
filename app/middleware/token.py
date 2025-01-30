@@ -20,6 +20,7 @@ def delete_access_token(response: Response):
 
 def validate_token(request: Request, response: Response) -> str:
     access_token = request.cookies.get("access_token")
+    print(access_token)
     if not access_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -60,6 +61,6 @@ def set_access_token(token: str, response: Response):
         value=token,                    # Nilai token JWT
         httponly=True,                  # Menghindari akses dari JavaScript
         secure=not debug,               # Hanya untuk koneksi HTTPS
-        samesite= "strict",             # Menghindari CSRF
-        max_age=access_token_expired,   # Set waktu kadaluarsa cookie (misal 1 jam)
+        samesite= "none",             # Menghindari CSRF
+        max_age=access_token_expired.seconds,   # Set waktu kadaluarsa cookie (misal 1 jam)
     )
